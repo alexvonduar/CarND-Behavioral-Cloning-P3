@@ -4,10 +4,14 @@ import numpy as np
 
 lines = []
 
+skip = True
 with open ('data/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
-        lines.append(line)
+        if skip == True:
+            skip = False
+        else:
+            lines.append(line)
 
 images = []
 measurments = []
