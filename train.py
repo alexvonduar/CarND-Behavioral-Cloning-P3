@@ -36,13 +36,25 @@ from keras.layers.pooling import MaxPooling2D
 model = Sequential()
 model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
 model.add(Lambda(lambda x: x / 255.0 - 0.5))
-model.add(Convolution2D(6,5,5,activation="relu"))
+# conv layer 1
+model.add(Convolution2D(24,5,5,activation="relu"))
 model.add(MaxPooling2D())
-model.add(Convolution2D(6,5,5,activation="relu"))
+# conv layer 2
+model.add(Convolution2D(36,5,5,activation="relu"))
 model.add(MaxPooling2D())
+# conv layer 3
+model.add(Convolution2D(48,5,5,activation="relu"))
+model.add(MaxPooling2D())
+# conv layer 4
+model.add(Convolution2D(64,3,3,activation="relu"))
+#model.add(MaxPooling2D())
+# conv layer 6
+model.add(Convolution2D(64,3,3,activation="relu"))
+#model.add(MaxPooling2D())
 model.add(Flatten())
-model.add(Dense(120))
-model.add(Dense(84))
+model.add(Dense(100))
+model.add(Dense(50))
+model.add(Dense(10))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
