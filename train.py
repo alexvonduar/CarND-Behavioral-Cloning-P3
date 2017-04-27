@@ -1,87 +1,80 @@
 import csv
-import cv2
-import numpy as np
 import os
 
-'''
-lines = []
 
-skip = True
-with open ('data/driving_log.csv') as csvfile:
-    reader = csv.reader(csvfile)
-    for line in reader:
-        if skip == True:
-            skip = False
-        else:
-            lines.append(line)
-
-images = []
-measurements = []
-for line in lines:
-    source_path = line[0]
-    filename = source_path.split('/')[-1]
-    current_path = 'data/IMG/' + filename
-    image = cv2.imread(current_path)
-    images.append(image)
-    measurement = float(line[3])
-    measurements.append(measurement)
-    image = cv2.flip(image, 1)
-    images.append(image)
-    measurements.append(-measurement)
-'''
-
-def read_data(images, measurements, path, skip = True):
-    lines = []
-
-    #skip = True
+def read_csv_samples(samples, path, skip = True):
     with open (os.path.join(path, 'driving_log.csv')) as csvfile:
         reader = csv.reader(csvfile)
-        for line in reader:
+        for sample in reader:
             if skip == True:
                 skip = False
             else:
-                lines.append(line)
+                sample[0] = os.path.join(path, sample[0].strip())
+                sample[1] = os.path.join(path, sample[1].strip())
+                sample[2] = os.path.join(path, sample[2].strip())
+                if os.path.exists(sample[0]) == False or os.path.exists(sample[1]) == False or os.path.exists(sample[2]) == False:
+                    print(sample[0], sample[1], sample[2], "not exist!")
+                    break
+                samples.append(sample)
+    return samples
 
-    #images = []
-    #measurements = []
-    for line in lines:
-        source_path = line[0]
-        filename = source_path.split('/')[-1]
-        current_path = os.path.join(path, 'IMG', filename)
-        image = cv2.imread(current_path)
-        images.append(image)
-        measurement = float(line[3])
-        measurements.append(measurement)
-        image = cv2.flip(image, 1)
-        images.append(image)
-        measurements.append(-measurement)
-        #print("Read image: ", current_path, measurement)
-    return images,measurements
-
+samples = []
+samples = read_csv_samples(samples, "data")
 
 MYDATA="mydata"
-
-images = []
-measurements = []
-
-images,measurements = read_data(images, measurements, "data")
-
 if os.path.isdir(MYDATA) and os.path.exists(MYDATA):
     print("Dir " + MYDATA + " exists")
     for f in os.listdir(MYDATA):
         f_root = os.path.join(MYDATA, f, "data")
         if os.path.isdir(f_root):
             print("read data from", f_root)
-            read_data(images, measurements, f_root, skip=False)
-        #else:
-        #    print("file " + f_root)
+            samples = read_csv_samples(samples, f_root, skip=False)
+
+print("samples ", len(samples))
+from sklearn.model_selection import train_test_split
+train_samples, validation_samples = train_test_split(samples, test_size=0.2)
+
+import cv2
+import numpy as np
+import sklearn
+
+def generator(samples, batch_size=32):
+    num_samples = len(samples)
+    while 1: # Loop forever so the generator never terminates
+        shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+
+            images = []
+            angles = []
+            for batch_sample in batch_samples:
+                #name = './IMG/'+batch_sample[0].split('/')[-1]
+                name = batch_sample[0]
+                if os.path.exists(name) != True:
+                    print(name, "not exist!")
+                    break
+                center_image = cv2.imread(name)
+                center_angle = float(batch_sample[3])
+                images.append(center_image)
+                angles.append(center_angle)
+
+            # trim image to only see section with road
+            X_train = np.array(images)
+            y_train = np.array(angles)
+            yield sklearn.utils.shuffle(X_train, y_train)
 
 
+# compile and train the model using the generator function
+train_generator = generator(train_samples, batch_size=32)
+validation_generator = generator(validation_samples, batch_size=32)
+
+'''
 X_train = np.array(images)
 y_train = np.array(measurements)
 
 print("X_train: ", X_train.shape)
 print("y_train: ", y_train.shape)
+'''
 
 from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
@@ -114,6 +107,10 @@ model.add(Dense(10))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
+#model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
+model.fit_generator(train_generator, samples_per_epoch= /
+                    len(train_samples), validation_data=validation_generator, /
+                                nb_val_samples=len(validation_samples), nb_epoch=5)
 
 model.save('model.h5')
+
