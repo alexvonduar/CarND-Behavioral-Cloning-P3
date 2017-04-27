@@ -14,18 +14,21 @@ with open ('data/driving_log.csv') as csvfile:
             lines.append(line)
 
 images = []
-measurments = []
+measurements = []
 for line in lines:
     source_path = line[0]
     filename = source_path.split('/')[-1]
     current_path = 'data/IMG/' + filename
     image = cv2.imread(current_path)
     images.append(image)
-    measurment = float(line[3])
-    measurments.append(measurment)
+    measurement = float(line[3])
+    measurements.append(measurement)
+    image = cv2.flip(image, 1)
+    images.append(image)
+    measurements.append(-measurement)
 
 X_train = np.array(images)
-y_train = np.array(measurments)
+y_train = np.array(measurements)
 
 from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
