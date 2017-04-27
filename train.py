@@ -41,7 +41,7 @@ import sklearn
 def generator(samples, batch_size=32):
     num_samples = len(samples)
     while 1: # Loop forever so the generator never terminates
-        shuffle(samples)
+        sklearn.utils.shuffle(samples)
         for offset in range(0, num_samples, batch_size):
             batch_samples = samples[offset:offset+batch_size]
 
@@ -108,8 +108,8 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 #model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
-model.fit_generator(train_generator, samples_per_epoch= /
-                    len(train_samples), validation_data=validation_generator, /
+model.fit_generator(train_generator, samples_per_epoch= \
+                    len(train_samples), validation_data=validation_generator, \
                                 nb_val_samples=len(validation_samples), nb_epoch=5)
 
 model.save('model.h5')
