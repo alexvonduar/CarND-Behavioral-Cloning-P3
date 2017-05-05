@@ -1,6 +1,9 @@
 import csv
 import os
-
+import cv2
+import numpy as np
+import sklearn
+from sklearn.model_selection import train_test_split
 
 def read_csv_samples(samples, path, skip = True):
     with open (os.path.join(path, 'driving_log.csv')) as csvfile:
@@ -31,19 +34,16 @@ if os.path.isdir(MYDATA) and os.path.exists(MYDATA):
             samples = read_csv_samples(samples, f_root, skip=False)
 
 print("samples ", len(samples))
-from sklearn.model_selection import train_test_split
+np.random.shuffle(samples)
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
-
-import cv2
-import numpy as np
-import sklearn
 
 def generator(samples, batch_size=32):
     num_samples = len(samples)
+    sample_size = int(batch_size / 2)
     while 1: # Loop forever so the generator never terminates
-        sklearn.utils.shuffle(samples)
-        for offset in range(0, num_samples, batch_size):
-            batch_samples = samples[offset:offset+batch_size]
+        np.random.shuffle(samples)
+        for offset in range(0, num_samples, sample_size):
+            batch_samples = samples[offset:offset+sample_size]
 
             images = []
             angles = []
@@ -57,6 +57,8 @@ def generator(samples, batch_size=32):
                 center_angle = float(batch_sample[3])
                 images.append(center_image)
                 angles.append(center_angle)
+                images.append(cv2.flip(center_image, 1))
+                angles.append(-center_angle)
 
             # trim image to only see section with road
             X_train = np.array(images)
@@ -109,8 +111,8 @@ model.add(Dense(1))
 model.compile(loss='mse', optimizer='adam')
 #model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
 model.fit_generator(train_generator, samples_per_epoch= \
-                    len(train_samples), validation_data=validation_generator, \
-                                nb_val_samples=len(validation_samples), nb_epoch=5)
+                    len(train_samples) * 2, validation_data=validation_generator, \
+                                nb_val_samples=len(validation_samples) * 2, nb_epoch=5)
 
 model.save('model.h5')
 
