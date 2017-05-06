@@ -22,8 +22,11 @@ def read_csv_samples(samples, path, skip = True):
     return samples
 
 samples = []
+
+# read udacity's data
 samples = read_csv_samples(samples, "data")
 
+# read my recorded data
 MYDATA="mydata"
 if os.path.isdir(MYDATA) and os.path.exists(MYDATA):
     print("Dir " + MYDATA + " exists")
@@ -35,6 +38,7 @@ if os.path.isdir(MYDATA) and os.path.exists(MYDATA):
 
 print("samples ", len(samples))
 np.random.shuffle(samples)
+
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 
 def generator(samples, batch_size=32):
@@ -99,7 +103,7 @@ model.add(MaxPooling2D())
 # conv layer 4
 model.add(Convolution2D(64,3,3,activation="relu"))
 #model.add(MaxPooling2D())
-# conv layer 6
+# conv layer 5
 model.add(Convolution2D(64,3,3,activation="relu"))
 #model.add(MaxPooling2D())
 model.add(Flatten())
